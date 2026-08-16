@@ -102,3 +102,71 @@ resource "aws_dynamodb_table" "user_credentials" {
     type = "S"
   }
 }
+resource "aws_iam_role" "broad_trust_role" {
+  name = "broad-ec2-trust-role"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect    = "Allow"
+      Principal = { Service = "ec2.amazonaws.com" }
+      Action    = "sts:AssumeRole"
+    }]
+  })
+}
+
+resource "aws_iam_instance_profile" "broad_trust_profile" {
+  name = "broad-ec2-trust-profile"
+  role = aws_iam_role.broad_trust_role.name
+}
+resource "aws_instance" "broad_trust_instance" {
+  ami                  = "ami-0c02fb55956c7d316"
+  instance_type        = "t3.micro"
+  iam_instance_profile = aws_iam_instance_profile.broad_trust_profile.name
+
+  tags = {
+    Name = "broad-trust-demo-instance"
+  }
+}
+resource "aws_iam_user" "old_admin_user" {
+  name = "old-admin-user"
+}
+
+resource "aws_iam_user_policy_attachment" "admin_attach" {
+  user       = aws_iam_user.old_admin_user.name
+  policy_arn = "arn:aws:iam::aws:policy/AdministratorAccess"
+}
+
+resource "aws_iam_access_key" "old_admin_key" {
+  user = aws_iam_user.old_admin_user.name
+}
+resource "aws_iam_role" "developer_role" {
+  name = "developer-role"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect    = "Allow"
+      Principal = { AWS = "arn:aws:iam::${var.account_id}:root" }
+      Action    = "sts:AssumeRole"
+    }]
+  })
+}
+
+resource "aws_iam_role_policy" "developer_iam_policy" {
+  name = "developer-iam-permissions"
+  role = aws_iam_role.developer_role.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect = "Allow"
+      Action = [
+        "iam:CreatePolicy",
+        "iam:AttachRolePolicy",
+        "iam:PutRolePolicy"
+      ]
+      Resource = "*"
+    }]
+  })
+}
