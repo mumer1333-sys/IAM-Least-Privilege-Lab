@@ -42,14 +42,16 @@ The goal isn't just to write Terraform, it's to demonstrate the judgment behind 
 
 ## Repository Structure
 
+```
 IAM-Least-Privilege-Lab/
 ├── terraform/
-│ ├── misconfigured/ ← the five deliberately broken configurations
-│ └── remediated/ ← the same environment, fixed to least privilege
-├── lambda/ ← Python proof-of-concept scripts
-├── findings/ ← five structured security findings
-├── screenshots/ ← audit evidence (Access Analyzer, credential report, policy JSON)
+│   ├── misconfigured/     (the five deliberately broken configurations)
+│   └── remediated/        (the same environment, fixed to least privilege)
+├── lambda/                (Python proof-of-concept scripts)
+├── findings/              (five structured security findings)
+├── screenshots/           (audit evidence: Access Analyzer, credential report, policy JSON)
 └── README.md
+```
 
 
 ## The Five Misconfigurations
