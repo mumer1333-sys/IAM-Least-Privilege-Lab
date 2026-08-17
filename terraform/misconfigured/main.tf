@@ -170,3 +170,33 @@ resource "aws_iam_role_policy" "developer_iam_policy" {
     }]
   })
 }
+
+data "archive_file" "wildcard_s3_zip" {
+  type        = "zip"
+  source_file = "${path.module}/../../lambda/wildcard_s3_demo.py"
+  output_path = "${path.module}/wildcard_s3_demo.zip"
+}
+
+resource "aws_lambda_function" "wildcard_s3_demo" {
+  function_name    = "wildcard-s3-blast-radius-demo"
+  role             = aws_iam_role.lambda_wildcard_s3.arn
+  handler          = "wildcard_s3_demo.lambda_handler"
+  runtime          = "python3.12"
+  filename         = data.archive_file.wildcard_s3_zip.output_path
+  source_code_hash = data.archive_file.wildcard_s3_zip.output_base64sha256
+}
+
+data "archive_file" "wildcard_dynamo_zip" {
+  type        = "zip"
+  source_file = "${path.module}/../../lambda/wildcard_dynamo_demo.py"
+  output_path = "${path.module}/wildcard_dynamo_demo.zip"
+}
+
+resource "aws_lambda_function" "wildcard_dynamo_demo" {
+  function_name    = "wildcard-dynamo-blast-radius-demo"
+  role             = aws_iam_role.lambda_wildcard_resource.arn
+  handler          = "wildcard_dynamo_demo.lambda_handler"
+  runtime          = "python3.12"
+  filename         = data.archive_file.wildcard_dynamo_zip.output_path
+  source_code_hash = data.archive_file.wildcard_dynamo_zip.output_base64sha256
+}
