@@ -98,3 +98,49 @@ resource "aws_iam_instance_profile" "scoped_trust_profile" {
   name = "scoped-ec2-trust-profile"
   role = aws_iam_role.scoped_trust_role.name
 }
+
+resource "aws_iam_policy" "developer_boundary" {
+  name = "developer-permission-boundary"
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect   = "Allow"
+      Action   = ["s3:*", "dynamodb:*", "lambda:*"]
+      Resource = "*"
+    }]
+  })
+}
+
+resource "aws_iam_role" "developer_role" {
+  name                 = "developer-role-remediated"
+  permissions_boundary = aws_iam_policy.developer_boundary.arn
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect    = "Allow"
+      Principal = { AWS = "arn:aws:iam::${var.account_id}:root" }
+      Action    = "sts:AssumeRole"
+    }]
+  })
+}
+
+resource "aws_iam_role_policy" "developer_iam_policy" {
+  name = "developer-iam-permissions"
+  role = aws_iam_role.developer_role.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect = "Allow"
+      Action = [
+        "iam:CreatePolicy",
+        "iam:AttachRolePolicy",
+        "iam:PutRolePolicy"
+      ]
+      Resource = "*"
+    }]
+  })
+}
+
